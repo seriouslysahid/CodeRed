@@ -31,7 +31,7 @@ const TopRiskLearners: React.FC<TopRiskLearnersProps> = ({
 
   if (isLoading) {
     return (
-      <Card className={className} padding="md">
+      <Card {...(className && { className })} padding="md">
         <div className="flex items-center space-x-2 mb-4">
           <AlertTriangle className="w-5 h-5 text-red-500" />
           <h3 className="text-lg font-semibold text-gray-900">Top At-Risk Learners</h3>
@@ -43,7 +43,7 @@ const TopRiskLearners: React.FC<TopRiskLearnersProps> = ({
 
   if (error) {
     return (
-      <Card className={className} padding="md">
+      <Card {...(className && { className })} padding="md">
         <div className="flex items-center space-x-2 mb-4">
           <AlertTriangle className="w-5 h-5 text-red-500" />
           <h3 className="text-lg font-semibold text-gray-900">Top At-Risk Learners</h3>
@@ -70,7 +70,7 @@ const TopRiskLearners: React.FC<TopRiskLearnersProps> = ({
     .slice(0, maxItems);
 
   return (
-    <Card className={className} padding="md">
+    <Card {...(className && { className })} padding="md">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -100,8 +100,8 @@ const TopRiskLearners: React.FC<TopRiskLearnersProps> = ({
                 key={learner.id}
                 learner={learner}
                 rank={index + 1}
-                onNudge={onNudgeLearner}
-                onView={onViewLearner}
+                {...(onNudgeLearner && { onNudge: onNudgeLearner })}
+                {...(onViewLearner && { onView: onViewLearner })}
                 showActions={showActions}
               />
             ))}

@@ -1,5 +1,9 @@
 'use client';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 import React, { useState } from 'react';
 import { Settings, Play, RefreshCw, AlertTriangle, CheckCircle, Clock, Users } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout';

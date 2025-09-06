@@ -78,7 +78,7 @@ export interface LearnersQueryParams {
   cursor?: number;
   limit?: number;
   search?: string;
-  riskFilter?: 'low' | 'medium' | 'high';
+  riskFilter?: 'all' | 'low' | 'medium' | 'high';
   sortBy?: 'name' | 'risk' | 'lastLogin';
   sortOrder?: 'asc' | 'desc';
 }

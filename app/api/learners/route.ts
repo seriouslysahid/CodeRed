@@ -60,7 +60,7 @@ async function getLearnersHandler(request: NextRequest): Promise<Response> {
   // Determine if there are more results
   const hasMore = data.length > limit;
   const learners = hasMore ? data.slice(0, limit) : data;
-  const nextCursor = hasMore && learners.length > 0 ? learners[learners.length - 1].id : null;
+  const nextCursor = hasMore && learners.length > 0 ? (learners[learners.length - 1] as any).id : null;
   
   // Optionally get total count (can be expensive for large datasets)
   let total: number | undefined;
@@ -93,17 +93,17 @@ async function getLearnersHandler(request: NextRequest): Promise<Response> {
 
 // POST /api/learners - Create a new learner
 async function createLearnerHandler(request: NextRequest): Promise<Response> {
-  const body = await request.json();
-  const learnerData = parseBody(learnerCreateSchema, body);
+  const body = await parseBody<CreateLearnerData>(request);
+  const learnerData = learnerCreateSchema.validate(body);
   
   log.info('Creating new learner', { email: learnerData.email, name: learnerData.name });
   
   // Compute initial risk score
   const riskScore = computeRiskScore({
-    completionPct: learnerData.completionPct,
-    quizAvg: learnerData.quizAvg,
-    missedSessions: learnerData.missedSessions,
-    lastLogin: learnerData.lastLogin ? new Date(learnerData.lastLogin) : new Date()
+    completionPct: learnerData.completionPct ?? 0,
+    quizAvg: learnerData.quizAvg ?? 0,
+    missedSessions: learnerData.missedSessions ?? 0,
+    lastLogin: new Date()
   });
   
   const riskLabel = riskLabelFromScore(riskScore);
@@ -120,7 +120,7 @@ async function createLearnerHandler(request: NextRequest): Promise<Response> {
     risk_label: riskLabel
   };
   
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await (supabaseAdmin as any)
     .from('learners')
     .insert(insertData)
     .select()

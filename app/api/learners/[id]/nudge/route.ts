@@ -2,7 +2,7 @@
 // Nudge generation endpoint with streaming support and fallback
 
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin, type Database } from '@/lib/supabase';
 import { withErrorHandling } from '@/lib/middleware';
 import { generateNudge, streamGemini, type LearnerForNudge } from '@/lib/gemini';
 import { log } from '@/lib/logger';
@@ -46,13 +46,27 @@ async function fetchLearnerForNudge(id: number): Promise<LearnerForNudge & { id:
     throw new Error(`Failed to fetch learner: ${error.message}`);
   }
   
+  if (!data) {
+    throw new NotFoundError('Learner', id);
+  }
+  
+  // Type assertion to help TypeScript understand the data structure
+  const learnerData = data as {
+    id: number;
+    name: string;
+    completion_pct: number;
+    quiz_avg: number;
+    missed_sessions: number;
+    risk_label: 'low' | 'medium' | 'high';
+  };
+  
   return {
-    id: data.id,
-    name: data.name,
-    completionPct: data.completion_pct,
-    quizAvg: data.quiz_avg,
-    missedSessions: data.missed_sessions,
-    riskLabel: data.risk_label
+    id: learnerData.id,
+    name: learnerData.name,
+    completionPct: learnerData.completion_pct,
+    quizAvg: learnerData.quiz_avg,
+    missedSessions: learnerData.missed_sessions,
+    riskLabel: learnerData.risk_label
   };
 }
 
@@ -63,14 +77,16 @@ async function persistNudge(
   source: 'gemini' | 'template',
   status: 'sent' | 'fallback' = 'sent'
 ): Promise<number> {
-  const { data, error } = await supabaseAdmin
+  const insertData: Database['public']['Tables']['nudges']['Insert'] = {
+    learner_id: learnerId,
+    text,
+    source,
+    status
+  };
+  
+  const { data, error } = await (supabaseAdmin as any)
     .from('nudges')
-    .insert({
-      learner_id: learnerId,
-      text,
-      source,
-      status
-    })
+    .insert(insertData)
     .select('id')
     .single();
   
@@ -187,8 +203,14 @@ async function generateNudgeHandler(
   // Check if streaming is requested and possible
   if (streaming) {
     try {
+      // Build the prompt for streaming
+      const prompt = `Generate an encouraging, personalized nudge message for ${learner.name}. 
+      Their current progress: ${learner.completionPct}% complete, quiz average: ${learner.quizAvg}%, 
+      missed sessions: ${learner.missedSessions}, risk level: ${learner.riskLabel}.
+      Keep it under 100 words, friendly, and motivating.`;
+      
       // Attempt streaming generation
-      const stream = await streamGemini(generateNudge(learner).then(r => r.text));
+      const stream = await streamGemini(prompt);
       const sseStream = createSSEStream(stream, learnerId);
       
       log.info('Starting streaming nudge generation', { learnerId });
@@ -267,4 +289,15 @@ async function generateNudgeHandler(
 }
 
 // Export handler with error handling
-export const POST = withErrorHandling(generateNudgeHandler);
+export const POST = withErrorHandling(async (request: NextRequest) => {
+  // Extract params from the URL
+  const url = new URL(request.url);
+  const pathSegments = url.pathname.split('/');
+  const id = pathSegments[pathSegments.indexOf('learners') + 1];
+  
+  if (!id) {
+    return Response.json({ error: 'Missing learner ID' }, { status: 400 });
+  }
+  
+  return generateNudgeHandler(request, { params: { id } });
+});

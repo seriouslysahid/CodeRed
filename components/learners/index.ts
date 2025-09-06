@@ -11,3 +11,5 @@ export type { FilterPanelProps } from './FilterPanel';
 
 export { default as ProgressTimeline } from './ProgressTimeline';
 export type { ProgressTimelineProps } from './ProgressTimeline';
+
+export { default as LearnersPageContent } from './LearnersPageContent';

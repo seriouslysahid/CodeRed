@@ -18,7 +18,14 @@ export function useFilterState(initialFilters?: Partial<FilterState>) {
   
   // Initialize filters from URL params or defaults
   const [filters, setFilters] = useState<FilterState>(() => {
-    const urlParams = parseQueryParams(searchParams.toString());
+    // Handle case where searchParams might not be available during build
+    let urlParams;
+    try {
+      urlParams = parseQueryParams(searchParams?.toString() || '');
+    } catch (error) {
+      urlParams = {};
+    }
+    
     return {
       search: urlParams.search || initialFilters?.search || DEFAULT_FILTERS.search,
       riskFilter: (urlParams.riskFilter as FilterState['riskFilter']) || 

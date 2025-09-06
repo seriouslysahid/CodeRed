@@ -108,7 +108,7 @@ const SimulationHistory: React.FC<SimulationHistoryProps> = ({
   };
 
   return (
-    <Card className={className} padding="lg">
+    <Card {...(className && { className })} padding="lg">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -168,7 +168,7 @@ const SimulationHistory: React.FC<SimulationHistoryProps> = ({
                   <div className="text-lg font-semibold text-green-600">
                     {item.status === 'completed' ? '100%' : 
                      item.status === 'failed' ? '0%' : 
-                     Math.round((item.processed / 156) * 100) + '%'}
+                     Math.round(((item as any).processed / 156) * 100) + '%'}
                   </div>
                   <div className="text-xs text-gray-600">Success Rate</div>
                 </div>

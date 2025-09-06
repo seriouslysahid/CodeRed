@@ -8,3 +8,5 @@ export type { TopRiskLearnersProps } from './TopRiskLearners';
 
 export { default as DashboardStats } from './DashboardStats';
 export type { DashboardStatsProps } from './DashboardStats';
+
+export { default as DashboardPageContent } from './DashboardPageContent';

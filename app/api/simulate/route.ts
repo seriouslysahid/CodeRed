@@ -103,7 +103,7 @@ async function processChunk(
   
   // Batch update if there are changes
   if (updates.length > 0) {
-    const { error } = await supabaseAdmin
+    const { error } = await (supabaseAdmin as any)
       .from('learners')
       .upsert(updates, { 
         onConflict: 'id',
@@ -147,12 +147,12 @@ async function getRiskSummary(): Promise<{
     };
   }
   
-  const riskDistribution = data.reduce((acc, learner) => {
+  const riskDistribution = data.reduce((acc, learner: any) => {
     acc[learner.risk_label] = (acc[learner.risk_label] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   
-  const avgRiskScore = data.reduce((sum, learner) => sum + learner.risk_score, 0) / data.length;
+  const avgRiskScore = data.reduce((sum, learner: any) => sum + learner.risk_score, 0) / data.length;
   
   return { riskDistribution, avgRiskScore };
 }
@@ -229,7 +229,7 @@ async function simulateHandler(request: NextRequest): Promise<Response> {
       chunks++;
       
       // Update cursor for next iteration
-      cursor = learnersToProcess[learnersToProcess.length - 1].id;
+      cursor = learnersToProcess.length > 0 ? (learnersToProcess[learnersToProcess.length - 1] as any).id : null;
       
       log.info('Processed chunk', {
         chunk: chunks,

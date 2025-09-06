@@ -203,8 +203,11 @@ export class QueryParamsValidationSchema implements ValidationSchema<LearnersQue
     }
 
     // Validate riskFilter
-    if ('riskFilter' in params && isValidRiskLabel(params.riskFilter)) {
-      result.riskFilter = params.riskFilter;
+    if ('riskFilter' in params) {
+      const validRiskFilters = ['all', 'low', 'medium', 'high'];
+      if (validRiskFilters.includes(params.riskFilter)) {
+        result.riskFilter = params.riskFilter;
+      }
     }
 
     // Validate sortBy
@@ -258,6 +261,39 @@ export function sanitizeNumber(input: any, min = 0, max = Number.MAX_SAFE_INTEGE
   }
   return num;
 }
+
+// Type definitions for API requests
+export interface CreateLearnerData {
+  name: string;
+  email: string;
+  completionPct?: number;
+  quizAvg?: number;
+  missedSessions?: number;
+}
+
+export interface UpdateLearnerData {
+  name?: string;
+  email?: string;
+  completionPct?: number;
+  quizAvg?: number;
+  missedSessions?: number;
+  riskScore?: number;
+  riskLabel?: 'low' | 'medium' | 'high';
+}
+
+// Parse request body utility
+export async function parseBody<T>(request: Request): Promise<T> {
+  try {
+    const body = await request.json();
+    return body as T;
+  } catch (error) {
+    throw new ValidationError('Invalid JSON in request body');
+  }
+}
+
+// Schema instances for common use cases
+export const learnerCreateSchema = new LearnerValidationSchema();
+export const learnerUpdateSchema = new LearnerValidationSchema();
 
 // Validation result type
 export interface ValidationResult<T> {

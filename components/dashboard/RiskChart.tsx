@@ -29,7 +29,7 @@ const RiskChart: React.FC<RiskChartProps> = ({
 
   if (isLoading) {
     return (
-      <Card className={className} padding="md">
+      <Card {...(className && { className })} padding="md">
         <div className="space-y-4">
           <Skeleton height="1.5rem" width="60%" />
           <Skeleton height="200px" />
@@ -47,7 +47,7 @@ const RiskChart: React.FC<RiskChartProps> = ({
 
   if (error || !riskData) {
     return (
-      <Card className={className} padding="md">
+      <Card {...(className && { className })} padding="md">
         <div className="text-center py-8">
           <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-2" />
           <p className="text-red-600 text-sm">Failed to load risk distribution</p>
@@ -135,7 +135,7 @@ const RiskChart: React.FC<RiskChartProps> = ({
   );
 
   return (
-    <Card className={className} padding="md">
+    <Card {...(className && { className })} padding="md">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -166,7 +166,7 @@ const RiskChart: React.FC<RiskChartProps> = ({
                 {riskData.high}
               </div>
               <div className="text-sm text-red-600">
-                {formatPercentage(chartData[0].percentage, 1)} of total
+                {formatPercentage(chartData[0]?.percentage || 0, 1)} of total
               </div>
             </div>
 
@@ -183,7 +183,7 @@ const RiskChart: React.FC<RiskChartProps> = ({
                 {riskData.medium}
               </div>
               <div className="text-sm text-yellow-600">
-                {formatPercentage(chartData[1].percentage, 1)} of total
+                {formatPercentage(chartData[1]?.percentage || 0, 1)} of total
               </div>
             </div>
 
@@ -200,7 +200,7 @@ const RiskChart: React.FC<RiskChartProps> = ({
                 {riskData.low}
               </div>
               <div className="text-sm text-green-600">
-                {formatPercentage(chartData[2].percentage, 1)} of total
+                {formatPercentage(chartData[2]?.percentage || 0, 1)} of total
               </div>
             </div>
           </div>

@@ -39,7 +39,11 @@ async function fetchLearnerById(id: number) {
     throw new Error(`Failed to fetch learner: ${error.message}`);
   }
   
-  return data;
+  if (!data) {
+    throw new NotFoundError('Learner', id);
+  }
+  
+  return data as any; // Type assertion to work around Supabase typing issues
 }
 
 // GET /api/learners/[id] - Get single learner
@@ -68,8 +72,8 @@ async function updateLearnerHandler(
   { params }: RouteParams
 ): Promise<Response> {
   const learnerId = parseLearnerId(params.id);
-  const body = await request.json();
-  const updateData = parseBody(learnerUpdateSchema, body);
+  const body = await parseBody<UpdateLearnerData>(request);
+  const updateData = learnerUpdateSchema.validate(body);
   
   log.info('Updating learner', { learnerId, updateFields: Object.keys(updateData) });
   
@@ -116,7 +120,7 @@ async function updateLearnerHandler(
   }
   
   // Perform the update
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await (supabaseAdmin as any)
     .from('learners')
     .update(updatedFields)
     .eq('id', learnerId)
@@ -191,6 +195,38 @@ async function deleteLearnerHandler(
 }
 
 // Export handlers with error handling
-export const GET = withErrorHandling(getLearnerHandler);
-export const PUT = withErrorHandling(updateLearnerHandler);
-export const DELETE = withErrorHandling(deleteLearnerHandler);
+export const GET = withErrorHandling(async (request: NextRequest) => {
+  const url = new URL(request.url);
+  const pathSegments = url.pathname.split('/');
+  const id = pathSegments[pathSegments.indexOf('learners') + 1];
+  
+  if (!id) {
+    return Response.json({ error: 'Missing learner ID' }, { status: 400 });
+  }
+  
+  return getLearnerHandler(request, { params: { id } });
+});
+
+export const PUT = withErrorHandling(async (request: NextRequest) => {
+  const url = new URL(request.url);
+  const pathSegments = url.pathname.split('/');
+  const id = pathSegments[pathSegments.indexOf('learners') + 1];
+  
+  if (!id) {
+    return Response.json({ error: 'Missing learner ID' }, { status: 400 });
+  }
+  
+  return updateLearnerHandler(request, { params: { id } });
+});
+
+export const DELETE = withErrorHandling(async (request: NextRequest) => {
+  const url = new URL(request.url);
+  const pathSegments = url.pathname.split('/');
+  const id = pathSegments[pathSegments.indexOf('learners') + 1];
+  
+  if (!id) {
+    return Response.json({ error: 'Missing learner ID' }, { status: 400 });
+  }
+  
+  return deleteLearnerHandler(request, { params: { id } });
+});
