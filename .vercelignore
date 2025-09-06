@@ -51,6 +51,5 @@ CHANGELOG.md
 # Configuration files
 .eslintrc.*
 .prettierrc*
-tsconfig.json
 vitest.config.ts
 playwright.config.ts
