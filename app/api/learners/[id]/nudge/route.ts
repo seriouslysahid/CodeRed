@@ -4,7 +4,8 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin, type Database } from '@/lib/supabase';
 import { withErrorHandling } from '@/lib/middleware';
-import { generateNudge, streamGemini, type LearnerForNudge } from '@/lib/gemini';
+import { withRateLimit } from '@/lib/rate-limit';
+import { generateLearnerNudge, streamNudge, type LearnerForNudge } from '@/lib/gemini-client';
 import { log } from '@/lib/logger';
 import { NotFoundError } from '@/lib/errors';
 
@@ -75,7 +76,8 @@ async function persistNudge(
   learnerId: number, 
   text: string, 
   source: 'gemini' | 'template',
-  status: 'sent' | 'fallback' = 'sent'
+  status: 'sent' | 'fallback' = 'sent',
+  streamed: boolean = false
 ): Promise<number> {
   const insertData: Database['public']['Tables']['nudges']['Insert'] = {
     learner_id: learnerId,
@@ -95,7 +97,8 @@ async function persistNudge(
       error: error.message, 
       learnerId, 
       source, 
-      textLength: text.length 
+      textLength: text.length,
+      streamed
     });
     throw new Error(`Failed to save nudge: ${error.message}`);
   }
@@ -103,6 +106,15 @@ async function persistNudge(
   if (!data) {
     throw new Error('No data returned from nudge insertion');
   }
+  
+  log.info('Nudge persisted successfully', {
+    nudgeId: data.id,
+    learnerId,
+    source,
+    status,
+    streamed,
+    textLength: text.length
+  });
   
   return data.id;
 }
@@ -203,14 +215,8 @@ async function generateNudgeHandler(
   // Check if streaming is requested and possible
   if (streaming) {
     try {
-      // Build the prompt for streaming
-      const prompt = `Generate an encouraging, personalized nudge message for ${learner.name}. 
-      Their current progress: ${learner.completionPct}% complete, quiz average: ${learner.quizAvg}%, 
-      missed sessions: ${learner.missedSessions}, risk level: ${learner.riskLabel}.
-      Keep it under 100 words, friendly, and motivating.`;
-      
-      // Attempt streaming generation
-      const stream = await streamGemini(prompt);
+      // Attempt streaming generation using new resilient client
+      const stream = await streamNudge('', { learner, learnerId });
       const sseStream = createSSEStream(stream, learnerId);
       
       log.info('Starting streaming nudge generation', { learnerId });
@@ -233,21 +239,20 @@ async function generateNudgeHandler(
     }
   }
   
-  // Non-streaming generation (fallback or requested)
+  // Non-streaming generation using new resilient client
   try {
-    const result = await generateNudge(learner, false);
+    const text = await generateLearnerNudge(learner);
+    
+    // Determine source based on content (simple heuristic)
+    const source: 'gemini' | 'template' = text.includes('TEST NUDGE') ? 'template' : 'gemini';
+    const status: 'sent' | 'fallback' = source === 'template' ? 'fallback' : 'sent';
     
     // Persist the nudge
-    const nudgeId = await persistNudge(
-      learnerId, 
-      result.text, 
-      result.source,
-      result.source === 'template' ? 'fallback' : 'sent'
-    );
+    const nudgeId = await persistNudge(learnerId, text, source, status, false);
     
     const response: NudgeResponse = {
-      text: result.text,
-      source: result.source,
+      text,
+      source,
       streaming: false,
       nudgeId,
       learnerId
@@ -256,8 +261,8 @@ async function generateNudgeHandler(
     log.info('Nudge generated successfully', {
       learnerId,
       nudgeId,
-      source: result.source,
-      textLength: result.text.length,
+      source,
+      textLength: text.length,
       streaming: false
     });
     
@@ -272,7 +277,7 @@ async function generateNudgeHandler(
     // Last resort: simple fallback
     const fallbackText = `Hi ${learner.name.split(' ')[0]}, time for a quick study session! You've got this! 🚀`;
     
-    const nudgeId = await persistNudge(learnerId, fallbackText, 'template', 'fallback');
+    const nudgeId = await persistNudge(learnerId, fallbackText, 'template', 'fallback', false);
     
     const response: NudgeResponse = {
       text: fallbackText,
@@ -288,16 +293,18 @@ async function generateNudgeHandler(
   }
 }
 
-// Export handler with error handling
-export const POST = withErrorHandling(async (request: NextRequest) => {
-  // Extract params from the URL
-  const url = new URL(request.url);
-  const pathSegments = url.pathname.split('/');
-  const id = pathSegments[pathSegments.indexOf('learners') + 1];
-  
-  if (!id) {
-    return Response.json({ error: 'Missing learner ID' }, { status: 400 });
-  }
-  
-  return generateNudgeHandler(request, { params: { id } });
-});
+// Export handler with error handling and rate limiting
+export const POST = withRateLimit(
+  withErrorHandling(async (request: NextRequest) => {
+    // Extract params from the URL
+    const url = new URL(request.url);
+    const pathSegments = url.pathname.split('/');
+    const id = pathSegments[pathSegments.indexOf('learners') + 1];
+    
+    if (!id) {
+      return Response.json({ error: 'Missing learner ID' }, { status: 400 });
+    }
+    
+    return generateNudgeHandler(request, { params: { id } });
+  })
+);
