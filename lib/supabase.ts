@@ -70,18 +70,22 @@ declare global {
   var __supabase_admin: SupabaseClient<Database> | undefined;
 }
 
-// Use service role key (server-side). Keep it secret.
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Lazy initialization of Supabase client to avoid build-time errors
+function getSupabaseAdmin(): SupabaseClient<Database> {
+  if (globalThis.__supabase_admin) {
+    return globalThis.__supabase_admin;
+  }
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars');
-}
+  // Use service role key (server-side). Keep it secret.
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Reuse across serverless invocations to prevent connection storms
-const supabaseAdmin: SupabaseClient<Database> =
-  globalThis.__supabase_admin ??
-  createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars');
+  }
+
+  // Reuse across serverless invocations to prevent connection storms
+  const supabaseAdmin: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
@@ -92,14 +96,14 @@ const supabaseAdmin: SupabaseClient<Database> =
       )
   });
 
-if (!globalThis.__supabase_admin) {
   globalThis.__supabase_admin = supabaseAdmin;
+  return supabaseAdmin;
 }
 
 // Health check function for database connectivity
 export async function checkDatabaseHealth(): Promise<{ connected: boolean; error?: string }> {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from('learners')
       .select('id')
       .limit(1);
@@ -117,4 +121,4 @@ export async function checkDatabaseHealth(): Promise<{ connected: boolean; error
   }
 }
 
-export { supabaseAdmin };
+export { getSupabaseAdmin as supabaseAdmin };
