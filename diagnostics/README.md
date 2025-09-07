@@ -354,7 +354,38 @@ if (!client || typeof client.from !== 'function') {
 - **Pagination**: ✅ Working correctly
 - **Error Handling**: ✅ Comprehensive logging
 
-The CodeRed dashboard is now fully functional and ready to display real learner data, risk analytics, and nudge history!
+The CodeRed dashboard is now fully functional and ready to display real learner data, risk analytics, nudge history, and live activity timelines!
+
+## 🆕 **NEW: Events API & Real-Time Timeline**
+
+### 4. `/api/events` - ✅ WORKING
+```bash
+curl http://localhost:3000/api/events
+curl "http://localhost:3000/api/events?learnerId=101&limit=5"
+```
+**Result:** Returns real learner activity events:
+- **Login Events**: With lesson IDs and quiz scores
+- **Quiz Attempts**: With scores and lesson IDs
+- **Lesson Completions**: With lesson IDs and completion data
+- **Video Watched**: With lesson IDs and watch data
+- **Rich Metadata**: JSON metadata for detailed activity tracking
+
+### ProgressTimeline Component Enhancement
+- **Real Data Integration**: Now fetches live events from `/api/events`
+- **Event Transformation**: Maps database events to timeline format
+- **Error Handling**: Comprehensive error states and loading indicators
+- **Activity Types**: Login, quiz attempts, lesson completions, video watches
+- **Rich Descriptions**: Dynamic descriptions based on event metadata
+
+### Database Schema Validation ✅
+The provided SQL schema is **perfectly compatible** with our implementation:
+- **`learners` table**: All fields match our API queries
+- **`nudges` table**: All fields match our API queries  
+- **`events` table**: Rich event tracking with metadata support
+- **Foreign Keys**: Proper relationships between tables
+- **Data Types**: All column types match our TypeScript interfaces
+
+The CodeRed dashboard now provides a complete real-time view of learner engagement, progress, and activity!
 
 ### API Routes Inventory
 
