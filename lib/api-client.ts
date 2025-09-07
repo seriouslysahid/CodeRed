@@ -8,6 +8,7 @@ import {
 import type {
   Learner,
   Nudge,
+  Event,
   PaginatedResponse,
   LearnersQueryParams,
   CreateNudgeRequest,
@@ -208,8 +209,15 @@ export class ApiClient {
     return this.stream(`/learners/${learnerId}/nudge`, undefined, signal);
   }
 
-  async getNudges(learnerId: number): Promise<Nudge[]> {
-    return this.get<Nudge[]>(`/learners/${learnerId}/nudges`);
+  async getNudges(learnerId?: number): Promise<Nudge[]> {
+    const endpoint = learnerId ? `/nudges?learnerId=${learnerId}` : '/nudges';
+    const response = await this.get<{ nudges: Nudge[] }>(endpoint);
+    return response.nudges || [];
+  }
+
+  async getEvents(params?: { learnerId?: number; limit?: number; type?: string }): Promise<Event[]> {
+    const response = await this.get<{ events: Event[] }>('/events', params);
+    return response.events || [];
   }
 
   // Admin-specific methods

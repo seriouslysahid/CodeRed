@@ -74,27 +74,21 @@ const NudgeManagementDashboard: React.FC = () => {
 
   const fetchNudges = async () => {
     try {
-      // This would be a new endpoint to fetch nudges
-      // For now, we'll simulate the data
-      const mockNudges: NudgeData[] = [
-        {
-          id: 1,
-          learner_id: 1,
-          text: "Hi Sarah! Ready for your next learning adventure? 🚀",
-          status: 'sent',
-          source: 'gemini',
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          learner_id: 2,
-          text: "Quick reminder: Your progress is looking great! Keep it up! 💪",
-          status: 'sent',
-          source: 'template',
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-        },
-      ];
-      setNudges(mockNudges);
+      const response = await fetch('/api/nudges');
+      const data = await response.json();
+      
+      if (data.nudges) {
+        // Transform API response to match component interface
+        const transformedNudges: NudgeData[] = data.nudges.map((nudge: any) => ({
+          id: nudge.id,
+          learner_id: nudge.learnerId,
+          text: nudge.text,
+          status: nudge.status,
+          source: nudge.source,
+          created_at: nudge.createdAt,
+        }));
+        setNudges(transformedNudges);
+      }
     } catch (error) {
       console.error('Failed to fetch nudges:', error);
     }

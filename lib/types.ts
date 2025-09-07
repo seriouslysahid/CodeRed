@@ -61,6 +61,16 @@ export interface RiskDistribution {
   low: number;
   medium: number;
   high: number;
+  total: number;
+  avgRiskScore: number;
+}
+
+export interface Event {
+  id: number;
+  learnerId: number;
+  type: string;
+  metadata: Record<string, any>;
+  createdAt: string;
 }
 
 // Request/Response types for API endpoints

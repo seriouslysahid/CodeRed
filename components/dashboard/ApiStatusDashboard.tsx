@@ -62,39 +62,39 @@ const ApiStatusDashboard: React.FC = () => {
       lastChecked: new Date(),
     },
     {
-      name: 'Learner Detail',
-      path: '/api/learners/[id]',
-      method: 'GET/PUT/DELETE',
-      description: 'Individual learner operations and risk updates',
+      name: 'Nudges API',
+      path: '/api/nudges',
+      method: 'GET',
+      description: 'Nudge management and history tracking',
       status: 'online',
       responseTime: 85,
       lastChecked: new Date(),
     },
     {
-      name: 'AI Nudge Generation',
-      path: '/api/learners/[id]/nudge',
-      method: 'POST',
-      description: 'AI-powered personalized nudge generation with streaming',
+      name: 'Risk Distribution',
+      path: '/api/learners/risk-distribution',
+      method: 'GET',
+      description: 'Real-time risk analytics and distribution',
       status: 'online',
-      responseTime: 2500,
+      responseTime: 75,
+      lastChecked: new Date(),
+    },
+    {
+      name: 'Events API',
+      path: '/api/events',
+      method: 'GET',
+      description: 'Learner activity tracking and timeline events',
+      status: 'online',
+      responseTime: 65,
       lastChecked: new Date(),
     },
     {
       name: 'Risk Simulation',
       path: '/api/simulate',
       method: 'POST',
-      description: 'Batch risk recomputation with chunked processing',
-      status: 'online',
-      responseTime: 15000,
-      lastChecked: new Date(),
-    },
-    {
-      name: 'Mock Data',
-      path: '/api/mock/learners',
-      method: 'GET',
-      description: 'Development mock data for testing and demos',
-      status: 'online',
-      responseTime: 25,
+      description: 'Batch risk recomputation (development only)',
+      status: 'offline',
+      responseTime: 0,
       lastChecked: new Date(),
     },
   ]);
@@ -111,7 +111,9 @@ const ApiStatusDashboard: React.FC = () => {
   const refreshStatus = async () => {
     setIsRefreshing(true);
     
-    // Simulate API calls to check endpoint status
+    const results = [];
+    
+    // Check each endpoint
     for (const endpoint of endpoints) {
       try {
         const startTime = Date.now();
@@ -123,28 +125,48 @@ const ApiStatusDashboard: React.FC = () => {
         });
         const responseTime = Date.now() - startTime;
         
+        const result = {
+          path: endpoint.path,
+          status: response.ok ? 'online' : 'offline',
+          responseTime,
+          lastChecked: new Date()
+        };
+        
+        results.push(result);
+        
         setEndpoints(prev => prev.map(ep => 
           ep.path === endpoint.path 
-            ? { 
-                ...ep, 
-                status: response.ok ? 'online' : 'offline',
-                responseTime,
-                lastChecked: new Date()
-              }
+            ? { ...ep, ...result }
             : ep
         ));
       } catch (error) {
+        const result = {
+          path: endpoint.path,
+          status: 'offline' as const,
+          responseTime: 0,
+          lastChecked: new Date()
+        };
+        
+        results.push(result);
+        
         setEndpoints(prev => prev.map(ep => 
           ep.path === endpoint.path 
-            ? { 
-                ...ep, 
-                status: 'offline',
-                lastChecked: new Date()
-              }
+            ? { ...ep, ...result }
             : ep
         ));
       }
     }
+    
+    // Update metrics based on real results
+    const onlineCount = results.filter(r => r.status === 'online').length;
+    const totalCount = results.length;
+    const avgResponseTime = results.reduce((sum, r) => sum + r.responseTime, 0) / totalCount;
+    
+    setMetrics(prev => ({
+      ...prev,
+      successRate: (onlineCount / totalCount) * 100,
+      avgResponseTime: Math.round(avgResponseTime),
+    }));
     
     setIsRefreshing(false);
   };

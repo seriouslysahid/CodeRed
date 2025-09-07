@@ -19,43 +19,75 @@ interface LiveActivityFeedProps {
 
 export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ className = '' }) => {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data generator for demo
+  // Fetch real events data
   useEffect(() => {
-    const generateMockActivity = (): ActivityItem => {
-      const types: ActivityItem['type'][] = ['login', 'quiz', 'nudge', 'risk', 'engagement'];
-      const learners = ['Sarah Chen', 'Mike Rodriguez', 'Emily Watson', 'Alex Johnson', 'Lisa Park'];
-      const messages = {
-        login: 'logged in and started a new session',
-        quiz: 'completed a quiz with 85% accuracy',
-        nudge: 'received a personalized nudge message',
-        risk: 'shows signs of disengagement',
-        engagement: 'increased engagement by 15%'
-      };
-
-      const type = types[Math.floor(Math.random() * types.length)];
-      const learner = learners[Math.floor(Math.random() * learners.length)];
-      
-      return {
-        id: Math.random().toString(36).substr(2, 9),
-        type,
-        message: messages[type],
-        timestamp: new Date(),
-        learnerName: learner,
-        severity: type === 'risk' ? 'high' : type === 'engagement' ? 'low' : 'medium'
-      };
+    const fetchRecentEvents = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/events?limit=10');
+        const data = await response.json();
+        
+        if (data.events) {
+          // Transform events to activity items
+          const transformedActivities: ActivityItem[] = data.events.map((event: any) => {
+            let type: ActivityItem['type'] = 'login';
+            let message = '';
+            let severity: ActivityItem['severity'] = 'medium';
+            
+            switch (event.type) {
+              case 'login':
+                type = 'login';
+                message = event.metadata.lessonId 
+                  ? `accessed lesson ${event.metadata.lessonId}`
+                  : 'logged in and started a new session';
+                severity = 'low';
+                break;
+              case 'quiz_attempt':
+                type = 'quiz';
+                message = `completed a quiz with ${event.metadata.quizScore || 'N/A'}% accuracy`;
+                severity = event.metadata.quizScore > 80 ? 'low' : event.metadata.quizScore > 60 ? 'medium' : 'high';
+                break;
+              case 'lesson_completed':
+                type = 'engagement';
+                message = `completed lesson ${event.metadata.lessonId || 'N/A'}`;
+                severity = 'low';
+                break;
+              case 'video_watched':
+                type = 'engagement';
+                message = `watched lesson ${event.metadata.lessonId || 'N/A'} video`;
+                severity = 'low';
+                break;
+              default:
+                type = 'login';
+                message = `${event.type} activity`;
+                severity = 'medium';
+            }
+            
+            return {
+              id: event.id.toString(),
+              type,
+              message,
+              timestamp: new Date(event.createdAt),
+              learnerName: `Learner ${event.learnerId}`, // We could fetch learner names if needed
+              severity
+            };
+          });
+          
+          setActivities(transformedActivities);
+        }
+      } catch (error) {
+        console.error('Failed to fetch recent events:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    // Add initial activities
-    const initialActivities = Array.from({ length: 5 }, generateMockActivity);
-    setActivities(initialActivities);
-
-    // Add new activity every 3-8 seconds
-    const interval = setInterval(() => {
-      const newActivity = generateMockActivity();
-      setActivities(prev => [newActivity, ...prev.slice(0, 9)]); // Keep only 10 items
-    }, Math.random() * 5000 + 3000);
-
+    fetchRecentEvents();
+    
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchRecentEvents, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -94,6 +126,29 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ className = 
     return `${Math.floor(minutes / 60)}h ago`;
   };
 
+  if (isLoading) {
+    return (
+      <div className={`bg-card rounded-lg border border-border p-4 ${className}`}>
+        <div className="flex items-center space-x-2 mb-4">
+          <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" />
+          <h3 className="font-semibold text-foreground">Live Activity</h3>
+        </div>
+        
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="flex items-start space-x-3 p-3 rounded-lg animate-pulse">
+              <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+              <div className="flex-1">
+                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`bg-card rounded-lg border border-border p-4 ${className}`}>
       <div className="flex items-center space-x-2 mb-4">
@@ -102,35 +157,41 @@ export const LiveActivityFeed: React.FC<LiveActivityFeedProps> = ({ className = 
       </div>
       
       <div className="space-y-3 max-h-80 overflow-y-auto scrollbar-thin">
-        <AnimatePresence>
-          {activities.map((activity, index) => (
-            <motion.div
-              key={activity.id}
-              initial={{ opacity: 0, x: -20, scale: 0.95 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 20, scale: 0.95 }}
-              transition={{ 
-                duration: 0.3,
-                delay: index * 0.05 
-              }}
-              className="flex items-start space-x-3 p-3 rounded-lg hover:bg-accent/50 transition-colors"
-            >
-              <div className={`p-2 rounded-full ${getActivityColor(activity.type, activity.severity)}`}>
-                {getActivityIcon(activity.type)}
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground">
-                  <span className="font-medium">{activity.learnerName}</span>{' '}
-                  {activity.message}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatTime(activity.timestamp)}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {activities.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <div className="text-sm">No recent activity</div>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {activities.map((activity, index) => (
+              <motion.div
+                key={activity.id}
+                initial={{ opacity: 0, x: -20, scale: 0.95 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                transition={{ 
+                  duration: 0.3,
+                  delay: index * 0.05 
+                }}
+                className="flex items-start space-x-3 p-3 rounded-lg hover:bg-accent/50 transition-colors"
+              >
+                <div className={`p-2 rounded-full ${getActivityColor(activity.type, activity.severity)}`}>
+                  {getActivityIcon(activity.type)}
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground">
+                    <span className="font-medium">{activity.learnerName}</span>{' '}
+                    {activity.message}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {formatTime(activity.timestamp)}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
       </div>
     </div>
   );

@@ -76,6 +76,8 @@ const SystemHealthDashboard: React.FC = () => {
 
   const runSimulation = async () => {
     try {
+      // Note: Simulation endpoint may not be available in production
+      // This is kept for development/testing purposes only
       const response = await fetch('/api/simulate', {
         method: 'POST',
         headers: {
@@ -86,10 +88,15 @@ const SystemHealthDashboard: React.FC = () => {
           chunkSize: 20,
         }),
       });
-      const data = await response.json();
-      setSimulationData(data);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setSimulationData(data);
+      } else {
+        console.warn('Simulation endpoint not available - using real data only');
+      }
     } catch (error) {
-      console.error('Failed to run simulation:', error);
+      console.warn('Simulation not available - using real data only:', error);
     }
   };
 
