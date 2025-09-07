@@ -62,10 +62,10 @@ export function withValidation<T>(
 }
 
 // Generic error handling wrapper for API routes
-export function withErrorHandling(
-  handler: (request: NextRequest) => Promise<Response>
+export function withErrorHandling<T>(
+  handler: (request: NextRequest, context: T) => Promise<Response>
 ) {
-  return async (request: NextRequest): Promise<Response> => {
+  return async (request: NextRequest, context: T): Promise<Response> => {
     const requestId = generateRequestId();
     
     try {
@@ -76,7 +76,7 @@ export function withErrorHandling(
         userAgent: request.headers.get('user-agent')
       });
       
-      const response = await handler(request);
+      const response = await handler(request, context);
       
       log.info('API request completed', {
         requestId,
