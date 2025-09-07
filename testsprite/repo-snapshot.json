@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-01-07T04:15:28Z",
+  "branch": "kiro/priority-fixes-20250907-041528",
+  "nodeEngine": ">=18.17.0",
+  "packageManager": "npm",
+  "projectName": "codred-frontend",
+  "version": "0.1.0",
+  "headSha": "be8f8c5591bceef2291edfb683d51f6645bdbd35",
+  "topLevelScripts": {
+    "dev": "next dev",
+    "build": "next build", 
+    "start": "next start",
+    "test": "vitest",
+    "test:unit": "vitest run --reporter=verbose --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "playwright test",
+    "ci": "npm run lint && npm run type-check && npm run test:unit && npm run build"
+  },
+  "testCommand": "vitest",
+  "framework": "Next.js 14.2.5",
+  "testingFrameworks": ["vitest", "playwright", "@testing-library/react"],
+  "keyDependencies": {
+    "supabase": "@supabase/supabase-js@^2.57.2",
+    "framerMotion": "framer-motion@^11.3.19",
+    "react": "react@^18.3.1",
+    "typescript": "typescript@^5.5.4"
+  }
+}
