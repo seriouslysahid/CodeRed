@@ -63,6 +63,19 @@ async function run() {
       console.log('Risk distribution query success:', riskData);
     }
 
+    console.log('\n--- Testing Events Query ---');
+    const { data: eventsData, error: eventsError } = await supabase
+      .from('events')
+      .select('id, learnerId, type, metadata, createdAt')
+      .limit(5);
+    
+    if (eventsError) {
+      console.error('Events query error:', eventsError);
+    } else {
+      console.log('Events query success:', eventsData);
+      console.log('Events count:', eventsData?.length || 0);
+    }
+
   } catch (err) {
     console.error('Test failed:', err);
   }

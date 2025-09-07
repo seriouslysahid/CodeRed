@@ -11,71 +11,96 @@ export interface ProgressTimelineProps {
   className?: string;
 }
 
-// Mock data for timeline - in real app this would come from an API
-const generateMockTimelineData = (learnerId: number) => {
-  const events = [
-    {
-      id: 1,
-      type: 'login' as const,
-      title: 'Last Login',
-      description: 'Accessed course dashboard',
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed' as const,
-    },
-    {
-      id: 2,
-      type: 'quiz' as const,
-      title: 'Quiz Completed',
-      description: 'Module 3 Assessment - Score: 85%',
-      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed' as const,
-      score: 85,
-    },
-    {
-      id: 3,
-      type: 'session' as const,
-      title: 'Missed Session',
-      description: 'Weekly review session #12',
-      timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'missed' as const,
-    },
-    {
-      id: 4,
-      type: 'achievement' as const,
-      title: 'Milestone Reached',
-      description: '50% course completion achieved',
-      timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed' as const,
-    },
-    {
-      id: 5,
-      type: 'quiz' as const,
-      title: 'Quiz Completed',
-      description: 'Module 2 Assessment - Score: 92%',
-      timestamp: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed' as const,
-      score: 92,
-    },
-    {
-      id: 6,
-      type: 'login' as const,
-      title: 'Course Started',
-      description: 'First login and course enrollment',
-      timestamp: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed' as const,
-    },
-  ];
-
-  return events;
+// Transform API event data to timeline format
+const transformEventToTimeline = (event: any) => {
+  const { id, type, metadata, createdAt } = event;
+  
+  // Map event types to timeline format
+  switch (type) {
+    case 'login':
+      return {
+        id,
+        type: 'login' as const,
+        title: 'Login',
+        description: metadata.lessonId ? `Accessed lesson ${metadata.lessonId}` : 'Accessed course dashboard',
+        timestamp: createdAt,
+        status: 'completed' as const,
+      };
+    case 'quiz_attempt':
+      return {
+        id,
+        type: 'quiz' as const,
+        title: 'Quiz Attempt',
+        description: `Quiz Score: ${metadata.quizScore || 'N/A'}%`,
+        timestamp: createdAt,
+        status: 'completed' as const,
+        score: metadata.quizScore,
+      };
+    case 'lesson_completed':
+      return {
+        id,
+        type: 'achievement' as const,
+        title: 'Lesson Completed',
+        description: `Lesson ${metadata.lessonId || 'N/A'} completed`,
+        timestamp: createdAt,
+        status: 'completed' as const,
+      };
+    case 'video_watched':
+      return {
+        id,
+        type: 'session' as const,
+        title: 'Video Watched',
+        description: `Watched lesson ${metadata.lessonId || 'N/A'} video`,
+        timestamp: createdAt,
+        status: 'completed' as const,
+      };
+    default:
+      return {
+        id,
+        type: 'session' as const,
+        title: 'Activity',
+        description: `${type} activity`,
+        timestamp: createdAt,
+        status: 'completed' as const,
+      };
+  }
 };
 
 const ProgressTimeline: React.FC<ProgressTimelineProps> = ({
   learnerId,
   className,
 }) => {
-  // In a real app, this would be a hook that fetches timeline data
-  const [isLoading] = React.useState(false);
-  const timelineEvents = generateMockTimelineData(learnerId);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [timelineEvents, setTimelineEvents] = React.useState<any[]>([]);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Fetch real timeline data from API
+  React.useEffect(() => {
+    const fetchTimelineData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const response = await fetch(`/api/events?learnerId=${learnerId}&limit=10`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch timeline data');
+        }
+        
+        const data = await response.json();
+        const transformedEvents = data.events.map(transformEventToTimeline);
+        setTimelineEvents(transformedEvents);
+      } catch (err) {
+        console.error('Error fetching timeline data:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load timeline');
+        // Fallback to empty array on error
+        setTimelineEvents([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTimelineData();
+  }, [learnerId]);
 
   if (isLoading) {
     return (
@@ -93,6 +118,28 @@ const ProgressTimeline: React.FC<ProgressTimelineProps> = ({
               </div>
             ))}
           </div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className={className} padding="md">
+        <div className="text-center py-8">
+          <div className="text-red-600 mb-2">⚠️ Timeline Error</div>
+          <div className="text-sm text-gray-600">{error}</div>
+        </div>
+      </Card>
+    );
+  }
+
+  if (timelineEvents.length === 0) {
+    return (
+      <Card className={className} padding="md">
+        <div className="text-center py-8">
+          <div className="text-gray-500 mb-2">📅 No Activity Yet</div>
+          <div className="text-sm text-gray-600">No timeline events found for this learner.</div>
         </div>
       </Card>
     );
