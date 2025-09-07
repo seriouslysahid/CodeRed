@@ -85,6 +85,10 @@ function createMockSupabaseClient(): SupabaseClient<Database> {
         gt: () => ({
           limit: () => Promise.resolve({ data: [], error: null })
         }),
+        in: () => Promise.resolve({ data: [], error: null }),
+        or: () => ({
+          limit: () => Promise.resolve({ data: [], error: null })
+        }),
         insert: () => ({
           select: () => ({
             single: () => Promise.resolve({ data: null, error: null })
@@ -173,4 +177,4 @@ export async function checkDatabaseHealth(): Promise<{ connected: boolean; error
   }
 }
 
-export { getSupabaseAdmin as supabaseAdmin };
+export const supabaseAdmin = getSupabaseAdmin();

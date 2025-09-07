@@ -101,7 +101,7 @@ const AdminPage: React.FC = () => {
               />
               <p className="text-blue-200 text-xs mt-1">All Systems Operational</p>
             </div>
-            <StatusIndicator status="online" size="lg" animated={true} />
+            <StatusIndicator status="online" size="lg" animated={false} />
           </div>
         </GradientCard>
 
@@ -124,7 +124,7 @@ const AdminPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-yellow-100 text-sm font-medium">AI Service</p>
-              <StatusIndicator status="online" label="Active" size="lg" animated={true} />
+              <StatusIndicator status="online" label="Active" size="lg" animated={false} />
               <p className="text-yellow-200 text-xs mt-1">Gemini AI Ready</p>
             </div>
             <Brain className="w-8 h-8 text-yellow-200" />
@@ -135,7 +135,7 @@ const AdminPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-cyan-100 text-sm font-medium">Database</p>
-              <StatusIndicator status="online" label="Connected" size="lg" animated={true} />
+              <StatusIndicator status="online" label="Connected" size="lg" animated={false} />
               <p className="text-cyan-200 text-xs mt-1">Supabase Active</p>
             </div>
             <Database className="w-8 h-8 text-cyan-200" />
@@ -154,7 +154,7 @@ const AdminPage: React.FC = () => {
               { label: 'Low Risk', value: learners.filter(l => l.riskLabel === 'low').length, color: '#10B981' },
             ]}
             type="pie"
-            animated={true}
+            animated={false}
             height={200}
             showLabels={true}
             showValues={true}
@@ -170,7 +170,7 @@ const AdminPage: React.FC = () => {
               { label: 'Engagement', value: learners.length > 0 ? Math.round(learners.filter(l => l.missedSessions < 2).length / learners.length * 100) : 0, color: '#8B5CF6' },
             ]}
             type="bar"
-            animated={true}
+            animated={false}
             height={200}
             showLabels={true}
             showValues={true}

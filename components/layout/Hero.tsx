@@ -78,7 +78,7 @@ const Hero: React.FC = () => {
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 sm:mb-8 leading-tight"
           >
             <span className="block sm:inline">Next-Gen </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-500 to-pink-500 block sm:inline animate-pulse-slow">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 block sm:inline">
               Learning Intelligence
             </span>
             <span className="block sm:inline"> Platform</span>
@@ -87,11 +87,11 @@ const Hero: React.FC = () => {
           {/* Enhanced subtitle */}
           <motion.p
             variants={itemVariants}
-            className="text-xl sm:text-2xl md:text-3xl text-muted-foreground mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed px-4 sm:px-0"
+            className="text-xl sm:text-2xl md:text-3xl text-gray-700 dark:text-gray-300 mb-8 sm:mb-12 max-w-4xl mx-auto leading-relaxed px-4 sm:px-0"
           >
-            Transform learner engagement with <span className="text-primary font-semibold">AI-powered</span> risk prediction, 
-            <span className="text-primary font-semibold"> real-time</span> nudges, and 
-            <span className="text-primary font-semibold"> predictive</span> analytics
+            Transform learner engagement with <span className="text-blue-600 dark:text-blue-400 font-semibold">AI-powered</span> risk prediction, 
+            <span className="text-blue-600 dark:text-blue-400 font-semibold"> real-time</span> nudges, and 
+            <span className="text-blue-600 dark:text-blue-400 font-semibold"> predictive</span> analytics
           </motion.p>
 
           {/* Enhanced CTA buttons */}
@@ -100,30 +100,26 @@ const Hero: React.FC = () => {
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 sm:mb-20 px-4 sm:px-0"
           >
             <Link href="/dashboard" className="w-full sm:w-auto">
-              <PulseGlow intensity="high" color="blue">
-                <Button 
-                  size="lg" 
-                  className="group w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                  touchOptimized={true}
-                >
-                  <BarChart3 className="w-5 h-5 mr-2" />
-                  Launch Dashboard
-                  <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </PulseGlow>
+              <Button 
+                size="lg" 
+                className="group w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                touchOptimized={true}
+              >
+                <BarChart3 className="w-5 h-5 mr-2" />
+                Launch Dashboard
+                <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+              </Button>
             </Link>
             <Link href="/learners" className="w-full sm:w-auto">
-              <PulseGlow intensity="medium" color="green">
-                <Button 
-                  variant="secondary" 
-                  size="lg"
-                  className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
-                  touchOptimized={true}
-                >
-                  <Users className="w-5 h-5 mr-2" />
-                  Manage Learners
-                </Button>
-              </PulseGlow>
+              <Button 
+                variant="secondary" 
+                size="lg"
+                className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                touchOptimized={true}
+              >
+                <Users className="w-5 h-5 mr-2" />
+                Manage Learners
+              </Button>
             </Link>
           </motion.div>
 
@@ -142,20 +138,18 @@ const Hero: React.FC = () => {
                 >
                   <GradientCard
                     gradient={feature.gradient as any}
-                    glow={true}
-                    animated={true}
+                    glow={false}
+                    animated={false}
                     className="text-white h-full"
                   >
                     <div className="text-center">
-                      <PulseGlow intensity="medium" color="blue">
-                        <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300">
-                          <Icon className="w-8 h-8 text-white" />
-                        </div>
-                      </PulseGlow>
+                      <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300">
+                        <Icon className="w-8 h-8 text-white" />
+                      </div>
                       <h3 className="text-lg font-bold text-white mb-3">
                         {feature.title}
                       </h3>
-                      <p className="text-white/80 text-sm leading-relaxed">
+                      <p className="text-white/90 text-sm leading-relaxed">
                         {feature.description}
                       </p>
                     </div>
@@ -173,21 +167,21 @@ const Hero: React.FC = () => {
             <GradientCard gradient="primary" className="text-white text-center">
               <EngagementMeter value={94} size="lg" label="Active Engagement" />
               <div className="mt-4">
-                <StatusIndicator status="online" label="Real-time" size="sm" animated={true} />
+                <StatusIndicator status="online" label="Real-time" size="sm" animated={false} />
               </div>
             </GradientCard>
             
             <GradientCard gradient="success" className="text-white text-center">
               <EngagementMeter value={89} size="lg" label="Retention Rate" />
               <div className="mt-4">
-                <StatusIndicator status="online" label="Optimized" size="sm" animated={true} />
+                <StatusIndicator status="online" label="Optimized" size="sm" animated={false} />
               </div>
             </GradientCard>
             
             <GradientCard gradient="warning" className="text-white text-center">
               <EngagementMeter value={96} size="lg" label="AI Accuracy" />
               <div className="mt-4">
-                <StatusIndicator status="online" label="Learning" size="sm" animated={true} />
+                <StatusIndicator status="online" label="Learning" size="sm" animated={false} />
               </div>
             </GradientCard>
           </motion.div>
@@ -203,7 +197,7 @@ const Hero: React.FC = () => {
                 <div className="flex items-center justify-center space-x-3">
                   <Database className="w-6 h-6 text-blue-200" />
                   <div className="text-center">
-                    <StatusIndicator status="online" label="Database" size="md" animated={true} />
+                    <StatusIndicator status="online" label="Database" size="md" animated={false} />
                     <p className="text-blue-100 text-xs mt-1">Supabase Connected</p>
                   </div>
                 </div>
@@ -211,7 +205,7 @@ const Hero: React.FC = () => {
                 <div className="flex items-center justify-center space-x-3">
                   <Brain className="w-6 h-6 text-green-200" />
                   <div className="text-center">
-                    <StatusIndicator status="online" label="AI Service" size="md" animated={true} />
+                    <StatusIndicator status="online" label="AI Service" size="md" animated={false} />
                     <p className="text-green-100 text-xs mt-1">Gemini Active</p>
                   </div>
                 </div>
@@ -219,7 +213,7 @@ const Hero: React.FC = () => {
                 <div className="flex items-center justify-center space-x-3">
                   <Shield className="w-6 h-6 text-purple-200" />
                   <div className="text-center">
-                    <StatusIndicator status="online" label="Security" size="md" animated={true} />
+                    <StatusIndicator status="online" label="Security" size="md" animated={false} />
                     <p className="text-purple-100 text-xs mt-1">Fully Secured</p>
                   </div>
                 </div>

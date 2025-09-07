@@ -29,12 +29,30 @@ export class ApiClient {
   private defaultHeaders: Record<string, string>;
 
   constructor(config: ApiClientConfig = {}) {
-    this.baseURL = config.baseURL || process.env.NEXT_PUBLIC_API_BASE || '/api';
+    // Ensure we have a proper base URL
+    const baseURL = config.baseURL || process.env.NEXT_PUBLIC_API_BASE || '/api';
+    
+    // Handle different base URL formats
+    if (baseURL.startsWith('http')) {
+      this.baseURL = baseURL;
+    } else if (baseURL.startsWith('/')) {
+      // Relative URL - prepend origin
+      this.baseURL = `${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}${baseURL}`;
+    } else {
+      // Fallback to localhost with /api
+      this.baseURL = 'http://localhost:3000/api';
+    }
+    
     this.timeout = config.timeout || 30000; // 30 seconds
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       ...config.defaultHeaders,
     };
+    
+    // Debug logging in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API Client initialized with baseURL:', this.baseURL);
+    }
   }
 
   private async request<T>(
@@ -217,8 +235,8 @@ export class ApiClient {
     return this.post<SimulationResponse>('/admin/simulate');
   }
 
-  async getSimulationStatus(): Promise<{ isRunning: boolean }> {
-    return this.get<{ isRunning: boolean }>('/admin/simulation-status');
+  async getSimulationStatus(): Promise<{ isRunning: boolean; lastRun?: string; nextAvailable?: string }> {
+    return this.get<{ isRunning: boolean; lastRun?: string; nextAvailable?: string }>('/admin/simulation-status');
   }
 }
 

@@ -87,13 +87,11 @@ const LearnersPageContent: React.FC = () => {
                 />
                 <p className="text-blue-200 text-xs mt-1">Active Users</p>
               </div>
-              <PulseGlow intensity="medium" color="blue">
-                <Users className="w-8 h-8 text-blue-200" />
-              </PulseGlow>
+              <Users className="w-8 h-8 text-blue-200" />
             </div>
           </GradientCard>
 
-          <GradientCard gradient="danger" glow={learners.filter(l => l.riskLabel === 'high').length > 0} className="text-white">
+          <GradientCard gradient="danger" glow={false} className="text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-red-100 text-sm font-medium">High Risk</p>
@@ -104,11 +102,9 @@ const LearnersPageContent: React.FC = () => {
                 />
                 <p className="text-red-200 text-xs mt-1">Need Attention</p>
               </div>
-              <PulseGlow intensity="high" color="red">
-                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                  <div className="w-4 h-4 bg-red-500 rounded-full" />
-                </div>
-              </PulseGlow>
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <div className="w-4 h-4 bg-red-500 rounded-full" />
+              </div>
             </div>
           </GradientCard>
 
@@ -123,11 +119,9 @@ const LearnersPageContent: React.FC = () => {
                 />
                 <p className="text-yellow-200 text-xs mt-1">Monitor Closely</p>
               </div>
-              <PulseGlow intensity="medium" color="yellow">
-                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <div className="w-4 h-4 bg-yellow-500 rounded-full" />
-                </div>
-              </PulseGlow>
+              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <div className="w-4 h-4 bg-yellow-500 rounded-full" />
+              </div>
             </div>
           </GradientCard>
 
@@ -142,11 +136,9 @@ const LearnersPageContent: React.FC = () => {
                 />
                 <p className="text-green-200 text-xs mt-1">On Track</p>
               </div>
-              <PulseGlow intensity="low" color="green">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <div className="w-4 h-4 bg-green-500 rounded-full" />
-                </div>
-              </PulseGlow>
+              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <div className="w-4 h-4 bg-green-500 rounded-full" />
+              </div>
             </div>
           </GradientCard>
         </div>

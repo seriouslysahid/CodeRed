@@ -1,7 +1,7 @@
 // app/api/learners/risk-distribution/route.ts
-// Risk distribution analytics endpoint
+// Risk distribution endpoint for learners
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 interface RiskDistributionResponse {
@@ -9,21 +9,48 @@ interface RiskDistributionResponse {
   medium: number;
   high: number;
   total: number;
-  avgRiskScore: number;
+  percentages: {
+    low: number;
+    medium: number;
+    high: number;
+  };
 }
 
-// GET /api/learners/risk-distribution - Get risk distribution analytics
-async function getRiskDistributionHandler(): Promise<Response> {
+// GET /api/learners/risk-distribution - Get risk distribution statistics
+export async function GET(): Promise<Response> {
   try {
     console.log('GET /api/learners/risk-distribution - Fetching risk distribution');
     
-    // Get all learners with risk data
+    // Check for dev simulation mode
+    const enableSim = process.env.NEXT_PUBLIC_ENABLE_DEV_SIM === 'true';
+    
+    // Build query to get risk distribution
     const { data, error } = await supabaseAdmin
       .from('learners')
-      .select('riskLabel, riskScore');
+      .select('riskLabel')
+      .in('riskLabel', ['low', 'medium', 'high']);
     
     if (error) {
       console.error('GET /api/learners/risk-distribution - Supabase error:', error);
+      
+      // If it's a permission error and dev sim is enabled, return sample data
+      if (enableSim && (error.message.includes('permission') || error.message.includes('RLS'))) {
+        console.log('GET /api/learners/risk-distribution - Using dev simulation due to permission error');
+        const response: RiskDistributionResponse = {
+          low: 40,
+          medium: 35,
+          high: 25,
+          total: 100,
+          percentages: {
+            low: 40,
+            medium: 35,
+            high: 25,
+          },
+        };
+        
+        return NextResponse.json(response);
+      }
+      
       return NextResponse.json(
         { error: 'Failed to fetch risk distribution from database' },
         { status: 500 }
@@ -31,27 +58,26 @@ async function getRiskDistributionHandler(): Promise<Response> {
     }
     
     // Calculate distribution
-    const learners = data || [];
-    const total = learners.length;
-    
-    const distribution = learners.reduce((acc, learner) => {
+    const distribution = (data || []).reduce((acc, learner: any) => {
       acc[learner.riskLabel] = (acc[learner.riskLabel] || 0) + 1;
       return acc;
-    }, {} as Record<string, number>);
+    }, { low: 0, medium: 0, high: 0 } as Record<string, number>);
     
-    const avgRiskScore = total > 0 
-      ? learners.reduce((sum, learner) => sum + (learner.riskScore || 0), 0) / total 
-      : 0;
+    const total = distribution.low + distribution.medium + distribution.high;
     
     const response: RiskDistributionResponse = {
-      low: distribution.low || 0,
-      medium: distribution.medium || 0,
-      high: distribution.high || 0,
+      low: distribution.low,
+      medium: distribution.medium,
+      high: distribution.high,
       total,
-      avgRiskScore: Math.round(avgRiskScore * 100) / 100 // Round to 2 decimal places
+      percentages: {
+        low: total > 0 ? Math.round((distribution.low / total) * 100) : 0,
+        medium: total > 0 ? Math.round((distribution.medium / total) * 100) : 0,
+        high: total > 0 ? Math.round((distribution.high / total) * 100) : 0,
+      },
     };
     
-    console.log(`GET /api/learners/risk-distribution - Returning distribution for ${total} learners`);
+    console.log(`GET /api/learners/risk-distribution - Returning distribution:`, response);
     return NextResponse.json(response);
     
   } catch (error) {
@@ -62,6 +88,3 @@ async function getRiskDistributionHandler(): Promise<Response> {
     );
   }
 }
-
-// Export handler
-export const GET = getRiskDistributionHandler;
