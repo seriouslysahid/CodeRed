@@ -70,6 +70,44 @@ declare global {
   var __supabase_admin: SupabaseClient<Database> | undefined;
 }
 
+// Mock Supabase client for when credentials are missing
+function createMockSupabaseClient(): SupabaseClient<Database> {
+  return {
+    from: () => ({
+      select: () => ({
+        limit: () => Promise.resolve({ data: [], error: null }),
+        order: () => ({
+          limit: () => Promise.resolve({ data: [], error: null })
+        }),
+        eq: () => ({
+          select: () => Promise.resolve({ data: [], error: null })
+        }),
+        gt: () => ({
+          limit: () => Promise.resolve({ data: [], error: null })
+        }),
+        insert: () => ({
+          select: () => ({
+            single: () => Promise.resolve({ data: null, error: null })
+          })
+        }),
+        upsert: () => Promise.resolve({ data: null, error: null }),
+        update: () => ({
+          eq: () => ({
+            select: () => Promise.resolve({ data: null, error: null })
+          })
+        }),
+        delete: () => ({
+          eq: () => Promise.resolve({ data: null, error: null })
+        })
+      })
+    }),
+    auth: {} as any,
+    storage: {} as any,
+    realtime: {} as any,
+    functions: {} as any
+  } as any;
+}
+
 // Lazy initialization of Supabase client to avoid build-time errors
 function getSupabaseAdmin(): SupabaseClient<Database> {
   if (globalThis.__supabase_admin) {
@@ -77,15 +115,29 @@ function getSupabaseAdmin(): SupabaseClient<Database> {
   }
 
   // Use service role key (server-side). Keep it secret.
-  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars');
+  if (!SUPABASE_URL) {
+    console.warn('Missing SUPABASE_URL env var - API will return empty data');
+    return createMockSupabaseClient();
+  }
+
+  // Fallback to anon key if service role key is missing (hackathon scenario)
+  const keyToUse = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+  
+  if (!keyToUse) {
+    console.warn('Missing both SUPABASE_SERVICE_ROLE_KEY and SUPABASE_ANON_KEY - API will return empty data');
+    return createMockSupabaseClient();
+  }
+
+  if (!SUPABASE_SERVICE_ROLE_KEY && SUPABASE_ANON_KEY) {
+    console.warn('Using anon key instead of service role key - this is a fallback for hackathon demo');
   }
 
   // Reuse across serverless invocations to prevent connection storms
-  const supabaseAdmin: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  const supabaseAdmin: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, keyToUse, {
     auth: {
       autoRefreshToken: false,
       persistSession: false

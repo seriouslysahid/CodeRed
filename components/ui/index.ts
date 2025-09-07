@@ -52,3 +52,10 @@ export { AnimatedBackground } from './AnimatedBackground';
 export { PulseIndicator } from './PulseIndicator';
 export { EngagementMeter } from './EngagementMeter';
 export { LiveActivityFeed } from './LiveActivityFeed';
+
+// Enhanced UI Components
+export { default as GradientCard } from './GradientCard';
+export { default as AnimatedCounter } from './AnimatedCounter';
+export { default as PulseGlow } from './PulseGlow';
+export { default as DataVisualization } from './DataVisualization';
+export { default as StatusIndicator } from './StatusIndicator';

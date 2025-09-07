@@ -10,3 +10,9 @@ export { default as DashboardStats } from './DashboardStats';
 export type { DashboardStatsProps } from './DashboardStats';
 
 export { default as DashboardPageContent } from './DashboardPageContent';
+
+// Enhanced Dashboard Components
+export { default as SystemHealthDashboard } from './SystemHealthDashboard';
+export { default as NudgeManagementDashboard } from './NudgeManagementDashboard';
+export { default as ApiStatusDashboard } from './ApiStatusDashboard';
+export { default as BackendFeaturesShowcase } from './BackendFeaturesShowcase';

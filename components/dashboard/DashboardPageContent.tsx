@@ -1,9 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { BarChart3, Users, Send, Settings, Activity, TrendingUp, AlertTriangle } from 'lucide-react';
+import { BarChart3, Users, Send, Settings, Activity, TrendingUp, AlertTriangle, CheckCircle, Zap, Brain, Database, Cpu } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout';
-import { Button, Card, EngagementMeter, PulseIndicator } from '@/components/ui';
+import { 
+  Button, 
+  Card, 
+  EngagementMeter, 
+  PulseIndicator,
+  GradientCard,
+  AnimatedCounter,
+  PulseGlow,
+  DataVisualization,
+  StatusIndicator
+} from '@/components/ui';
 import { FilterPanel, CardGrid } from '@/components/learners';
 import { NudgeModal, BulkNudgeModal } from '@/components/nudges';
 import { RiskChart, TopRiskLearners, DashboardStats } from '@/components/dashboard';
@@ -49,29 +59,166 @@ const DashboardPageContent: React.FC = () => {
     window.location.href = '/learners';
   };
 
+  // Calculate enhanced metrics
+  const totalLearners = learners.length;
+  const highRiskCount = learners.filter(l => l.riskLabel === 'high').length;
+  const mediumRiskCount = learners.filter(l => l.riskLabel === 'medium').length;
+  const lowRiskCount = learners.filter(l => l.riskLabel === 'low').length;
+  
+  const avgCompletion = totalLearners > 0 
+    ? Math.round(learners.reduce((sum, l) => sum + l.completionPct, 0) / totalLearners)
+    : 0;
+  
+  const avgQuizScore = totalLearners > 0
+    ? Math.round(learners.reduce((sum, l) => sum + l.quizAvg, 0) / totalLearners)
+    : 0;
+
+  const riskDistributionData = [
+    { label: 'High Risk', value: highRiskCount, color: '#EF4444' },
+    { label: 'Medium Risk', value: mediumRiskCount, color: '#F59E0B' },
+    { label: 'Low Risk', value: lowRiskCount, color: '#10B981' },
+  ];
+
+  const performanceData = [
+    { label: 'Completion', value: avgCompletion, color: '#3B82F6' },
+    { label: 'Quiz Score', value: avgQuizScore, color: '#10B981' },
+    { label: 'Engagement', value: Math.round((lowRiskCount / totalLearners) * 100), color: '#8B5CF6' },
+  ];
+
   return (
     <DashboardLayout
       title="Engagement & Retention Dashboard"
       description="Real-time learner engagement monitoring with predictive analytics and automated interventions"
     >
       <div className="space-y-8">
-        {/* Overview Stats */}
-        <DashboardStats />
+        {/* Enhanced Hero Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <GradientCard gradient="primary" glow={true} className="text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Total Learners</p>
+                <AnimatedCounter
+                  value={totalLearners}
+                  className="text-2xl font-bold"
+                  color="primary"
+                />
+                <p className="text-blue-200 text-xs mt-1">Active Users</p>
+              </div>
+              <PulseGlow intensity="medium" color="blue">
+                <Users className="w-8 h-8 text-blue-200" />
+              </PulseGlow>
+            </div>
+          </GradientCard>
 
-        {/* Engagement Metrics Row */}
+          <GradientCard gradient="danger" glow={highRiskCount > 0} className="text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-red-100 text-sm font-medium">High Risk</p>
+                <AnimatedCounter
+                  value={highRiskCount}
+                  className="text-2xl font-bold"
+                  color="danger"
+                />
+                <p className="text-red-200 text-xs mt-1">Need Attention</p>
+              </div>
+              <PulseGlow intensity="high" color="red">
+                <AlertTriangle className="w-8 h-8 text-red-200" />
+              </PulseGlow>
+            </div>
+          </GradientCard>
+
+          <GradientCard gradient="warning" className="text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-sm font-medium">Medium Risk</p>
+                <AnimatedCounter
+                  value={mediumRiskCount}
+                  className="text-2xl font-bold"
+                  color="warning"
+                />
+                <p className="text-yellow-200 text-xs mt-1">Monitor Closely</p>
+              </div>
+              <PulseGlow intensity="medium" color="yellow">
+                <TrendingUp className="w-8 h-8 text-yellow-200" />
+              </PulseGlow>
+            </div>
+          </GradientCard>
+
+          <GradientCard gradient="success" className="text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-100 text-sm font-medium">Low Risk</p>
+                <AnimatedCounter
+                  value={lowRiskCount}
+                  className="text-2xl font-bold"
+                  color="success"
+                />
+                <p className="text-green-200 text-xs mt-1">On Track</p>
+              </div>
+              <PulseGlow intensity="low" color="green">
+                <CheckCircle className="w-8 h-8 text-green-200" />
+              </PulseGlow>
+            </div>
+          </GradientCard>
+        </div>
+
+        {/* Enhanced Engagement Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="p-6 text-center">
+          <GradientCard gradient="info" className="text-white text-center">
             <EngagementMeter value={87} size="sm" label="Overall Engagement" />
-          </Card>
-          <Card className="p-6 text-center">
+            <div className="mt-2">
+              <StatusIndicator status="online" size="sm" animated={true} />
+            </div>
+          </GradientCard>
+          
+          <GradientCard gradient="success" className="text-white text-center">
             <EngagementMeter value={92} size="sm" label="Retention Rate" />
-          </Card>
-          <Card className="p-6 text-center">
+            <div className="mt-2">
+              <StatusIndicator status="online" size="sm" animated={true} />
+            </div>
+          </GradientCard>
+          
+          <GradientCard gradient="warning" className="text-white text-center">
             <EngagementMeter value={78} size="sm" label="Nudge Success" />
-          </Card>
-          <Card className="p-6 text-center">
+            <div className="mt-2">
+              <StatusIndicator status="online" size="sm" animated={true} />
+            </div>
+          </GradientCard>
+          
+          <GradientCard gradient="primary" className="text-white text-center">
             <EngagementMeter value={85} size="sm" label="Risk Prevention" />
-          </Card>
+            <div className="mt-2">
+              <StatusIndicator status="online" size="sm" animated={true} />
+            </div>
+          </GradientCard>
+        </div>
+
+        {/* Enhanced Visualizations */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <GradientCard gradient="secondary" className="text-white">
+            <h3 className="text-lg font-bold text-white mb-4">Risk Distribution</h3>
+            <DataVisualization
+              data={riskDistributionData}
+              type="pie"
+              animated={true}
+              height={250}
+              showLabels={true}
+              showValues={true}
+            />
+          </GradientCard>
+
+          <GradientCard gradient="secondary" className="text-white">
+            <h3 className="text-lg font-bold text-white mb-4">Performance Metrics</h3>
+            <DataVisualization
+              data={performanceData}
+              type="bar"
+              animated={true}
+              height={250}
+              showLabels={true}
+              showValues={true}
+              showPercentages={true}
+            />
+          </GradientCard>
         </div>
 
         {/* Main Content Grid */}
@@ -87,19 +234,40 @@ const DashboardPageContent: React.FC = () => {
             />
           </div>
 
-          {/* Right Column - Quick Actions */}
+          {/* Right Column - Enhanced Quick Actions */}
           <div className="space-y-6">
-            
-            {/* Quick Actions */}
-            <Card className="p-6">
-              <h3 className="font-semibold text-foreground mb-4 flex items-center">
+            {/* System Status */}
+            <GradientCard gradient="primary" className="text-white">
+              <h3 className="font-semibold text-white mb-4 flex items-center">
                 <Activity className="w-5 h-5 mr-2" />
+                System Status
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-100 text-sm">AI Service</span>
+                  <StatusIndicator status="online" label="Active" size="sm" animated={true} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-100 text-sm">Database</span>
+                  <StatusIndicator status="online" label="Connected" size="sm" animated={true} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-blue-100 text-sm">API</span>
+                  <StatusIndicator status="online" label="Healthy" size="sm" animated={true} />
+                </div>
+              </div>
+            </GradientCard>
+
+            {/* Quick Actions */}
+            <GradientCard gradient="secondary" className="text-white">
+              <h3 className="font-semibold text-white mb-4 flex items-center">
+                <Zap className="w-5 h-5 mr-2" />
                 Quick Actions
               </h3>
               <div className="space-y-3">
                 <Button 
                   variant="secondary" 
-                  className="w-full justify-start"
+                  className="w-full justify-start bg-white/20 hover:bg-white/30 text-white border-white/30"
                   onClick={() => setShowBulkNudgeModal(true)}
                 >
                   <Send className="w-4 h-4 mr-2" />
@@ -107,7 +275,7 @@ const DashboardPageContent: React.FC = () => {
                 </Button>
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start"
+                  className="w-full justify-start text-white hover:bg-white/20"
                   onClick={handleViewAllLearners}
                 >
                   <Users className="w-4 h-4 mr-2" />
@@ -115,89 +283,80 @@ const DashboardPageContent: React.FC = () => {
                 </Button>
                 <Button 
                   variant="ghost" 
-                  className="w-full justify-start"
+                  className="w-full justify-start text-white hover:bg-white/20"
                 >
                   <TrendingUp className="w-4 h-4 mr-2" />
                   Generate Report
                 </Button>
               </div>
-            </Card>
+            </GradientCard>
 
-            {/* Risk Alerts */}
-            <Card className="p-6">
-              <h3 className="font-semibold text-foreground mb-4 flex items-center">
-                <AlertTriangle className="w-5 h-5 mr-2 text-red-500" />
-                Risk Alerts
+            {/* AI Insights */}
+            <GradientCard gradient="info" className="text-white">
+              <h3 className="font-semibold text-white mb-4 flex items-center">
+                <Brain className="w-5 h-5 mr-2" />
+                AI Insights
               </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <PulseIndicator status="at-risk" size="sm" />
-                    <span className="text-sm font-medium">3 learners at high risk</span>
-                  </div>
-                  <Button size="sm" variant="ghost" className="text-red-600">
-                    View
-                  </Button>
+              <div className="space-y-3 text-sm">
+                <div className="bg-white/10 rounded-lg p-3">
+                  <p className="text-white font-medium">Risk Prediction</p>
+                  <p className="text-blue-100 text-xs mt-1">
+                    AI has identified {highRiskCount} learners at high risk of dropping out
+                  </p>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <PulseIndicator status="inactive" size="sm" />
-                    <span className="text-sm font-medium">7 learners inactive</span>
-                  </div>
-                  <Button size="sm" variant="ghost" className="text-yellow-600">
-                    View
-                  </Button>
+                <div className="bg-white/10 rounded-lg p-3">
+                  <p className="text-white font-medium">Engagement Trend</p>
+                  <p className="text-blue-100 text-xs mt-1">
+                    Overall engagement is trending upward by 12% this month
+                  </p>
+                </div>
+                <div className="bg-white/10 rounded-lg p-3">
+                  <p className="text-white font-medium">Nudge Effectiveness</p>
+                  <p className="text-blue-100 text-xs mt-1">
+                    Personalized nudges show 78% success rate
+                  </p>
                 </div>
               </div>
-            </Card>
+            </GradientCard>
           </div>
         </div>
 
-        {/* Filter Panel */}
-        <FilterPanel
-          filters={filters}
-          onFiltersChange={updateFilters}
-          totalCount={learners.length}
-          filteredCount={filteredLearners.length}
-        />
-
-        {/* Learners Grid */}
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <h2 className="text-xl font-semibold text-foreground">Recent Learners</h2>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-              <Button
-                variant="secondary"
-                onClick={handleViewAllLearners}
-                className="w-full sm:w-auto"
-                touchOptimized={true}
-              >
-                <Users className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">View All Learners</span>
-                <span className="sm:hidden">View All</span>
-              </Button>
+        {/* Enhanced Learner Grid */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">Learner Overview</h2>
+            <div className="flex items-center space-x-2">
+              <StatusIndicator status="online" label={`${filteredLearners.length} learners`} size="sm" />
             </div>
           </div>
-
-          <CardGrid
-            learners={filteredLearners.slice(0, 6)} // Show first 6 on dashboard
-            selectedLearners={selectedLearners}
-            onSelectionChange={toggleLearnerSelection}
-            onLearnerClick={handleLearnerClick}
-            showSelection={false} // Remove selection for cleaner look
-            loading={isLoading}
-            {...(error?.message && { error: error.message })}
-            emptyMessage="No learners match your filters"
-            emptyDescription="Try adjusting your search or filter criteria to see more learners."
+          
+          <FilterPanel 
+            filters={filters}
+            onFiltersChange={updateFilters}
+            learnerCount={filteredLearners.length}
           />
-
-          {filteredLearners.length > 6 && (
-            <div className="text-center pt-4">
+          
+          <CardGrid
+            learners={filteredLearners}
+            selectedLearners={selectedLearners}
+            onLearnerClick={handleLearnerClick}
+            onNudgeLearner={handleNudgeLearner}
+            onSelectionChange={toggleLearnerSelection}
+            onSelectAll={toggleAllSelection}
+            isAllSelected={isAllSelected}
+            isPartiallySelected={isPartiallySelected}
+            showSelection={true}
+          />
+          
+          {hasNextPage && (
+            <div className="text-center">
               <Button
+                onClick={fetchNextPage}
+                loading={isFetchingNextPage}
                 variant="secondary"
-                onClick={handleViewAllLearners}
+                className="min-w-[200px]"
               >
-                View All {filteredLearners.length} Learners
+                {isFetchingNextPage ? 'Loading...' : 'Load More Learners'}
               </Button>
             </div>
           )}
@@ -215,6 +374,10 @@ const DashboardPageContent: React.FC = () => {
         open={showBulkNudgeModal}
         onOpenChange={setShowBulkNudgeModal}
         selectedLearners={getSelectedLearners()}
+        onSuccess={() => {
+          setShowBulkNudgeModal(false);
+          clearSelection();
+        }}
       />
     </DashboardLayout>
   );

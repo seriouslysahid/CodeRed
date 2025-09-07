@@ -4,7 +4,15 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Send, Users, Download } from 'lucide-react';
 import { DashboardLayout } from '@/components/layout';
-import { Button, Card } from '@/components/ui';
+import { 
+  Button, 
+  Card, 
+  GradientCard,
+  AnimatedCounter,
+  PulseGlow,
+  DataVisualization,
+  StatusIndicator
+} from '@/components/ui';
 import { FilterPanel, CardGrid } from '@/components/learners';
 import { NudgeModal, BulkNudgeModal } from '@/components/nudges';
 import { useAllLearners, useFilterState, useLearnerSelection } from '@/hooks';
@@ -66,59 +74,81 @@ const LearnersPageContent: React.FC = () => {
       description="Manage and monitor all learners in your program"
     >
       <div className="space-y-6">
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card padding="md" className="bg-blue-50 border-blue-200">
+        {/* Enhanced Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <GradientCard gradient="primary" className="text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-600 text-sm font-medium">Total Learners</p>
-                <p className="text-2xl font-bold text-blue-700">{learners.length}</p>
+                <p className="text-blue-100 text-sm font-medium">Total Learners</p>
+                <AnimatedCounter
+                  value={learners.length}
+                  className="text-2xl font-bold"
+                  color="primary"
+                />
+                <p className="text-blue-200 text-xs mt-1">Active Users</p>
               </div>
-              <Users className="w-8 h-8 text-blue-500" />
+              <PulseGlow intensity="medium" color="blue">
+                <Users className="w-8 h-8 text-blue-200" />
+              </PulseGlow>
             </div>
-          </Card>
+          </GradientCard>
 
-          <Card padding="md" className="bg-red-50 border-red-200">
+          <GradientCard gradient="danger" glow={learners.filter(l => l.riskLabel === 'high').length > 0} className="text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-red-600 text-sm font-medium">High Risk</p>
-                <p className="text-2xl font-bold text-red-700">
-                  {learners.filter(l => l.riskLabel === 'high').length}
-                </p>
+                <p className="text-red-100 text-sm font-medium">High Risk</p>
+                <AnimatedCounter
+                  value={learners.filter(l => l.riskLabel === 'high').length}
+                  className="text-2xl font-bold"
+                  color="danger"
+                />
+                <p className="text-red-200 text-xs mt-1">Need Attention</p>
               </div>
-              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-red-500 rounded-full" />
-              </div>
+              <PulseGlow intensity="high" color="red">
+                <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                  <div className="w-4 h-4 bg-red-500 rounded-full" />
+                </div>
+              </PulseGlow>
             </div>
-          </Card>
+          </GradientCard>
 
-          <Card padding="md" className="bg-yellow-50 border-yellow-200">
+          <GradientCard gradient="warning" className="text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-600 text-sm font-medium">Medium Risk</p>
-                <p className="text-2xl font-bold text-yellow-700">
-                  {learners.filter(l => l.riskLabel === 'medium').length}
-                </p>
+                <p className="text-yellow-100 text-sm font-medium">Medium Risk</p>
+                <AnimatedCounter
+                  value={learners.filter(l => l.riskLabel === 'medium').length}
+                  className="text-2xl font-bold"
+                  color="warning"
+                />
+                <p className="text-yellow-200 text-xs mt-1">Monitor Closely</p>
               </div>
-              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-yellow-500 rounded-full" />
-              </div>
+              <PulseGlow intensity="medium" color="yellow">
+                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <div className="w-4 h-4 bg-yellow-500 rounded-full" />
+                </div>
+              </PulseGlow>
             </div>
-          </Card>
+          </GradientCard>
 
-          <Card padding="md" className="bg-green-50 border-green-200">
+          <GradientCard gradient="success" className="text-white">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-600 text-sm font-medium">Low Risk</p>
-                <p className="text-2xl font-bold text-green-700">
-                  {learners.filter(l => l.riskLabel === 'low').length}
-                </p>
+                <p className="text-green-100 text-sm font-medium">Low Risk</p>
+                <AnimatedCounter
+                  value={learners.filter(l => l.riskLabel === 'low').length}
+                  className="text-2xl font-bold"
+                  color="success"
+                />
+                <p className="text-green-200 text-xs mt-1">On Track</p>
               </div>
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <div className="w-4 h-4 bg-green-500 rounded-full" />
-              </div>
+              <PulseGlow intensity="low" color="green">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <div className="w-4 h-4 bg-green-500 rounded-full" />
+                </div>
+              </PulseGlow>
             </div>
-          </Card>
+          </GradientCard>
         </div>
 
         {/* Filter Panel */}
