@@ -26,7 +26,38 @@ interface PaginatedLearnersResponse {
 // GET /api/learners - List learners with cursor-based pagination
 async function getLearnersHandler(request: NextRequest): Promise<Response> {
   try {
-    console.log('GET /api/learners - Fetching learners');
+    console.log('GET /api/learners - Starting request');
+    
+    // Test environment variables
+    const envCheck = {
+      SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'MISSING',
+      SERVICE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'MISSING',
+      ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
+      DEV_SIM: process.env.NEXT_PUBLIC_ENABLE_DEV_SIM
+    };
+    console.log('Environment check:', envCheck);
+    
+    console.log('Supabase admin available:', !!supabaseAdmin);
+    console.log('Supabase admin type:', typeof supabaseAdmin);
+    console.log('Supabase admin has from method:', typeof supabaseAdmin?.from);
+    
+    // If supabaseAdmin is not working, create a direct client
+    let client = supabaseAdmin;
+    if (!client || typeof client.from !== 'function') {
+      console.log('Creating direct Supabase client...');
+      const { createClient } = await import('@supabase/supabase-js');
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!url || !key) {
+        return NextResponse.json({ error: 'Missing Supabase credentials' }, { status: 500 });
+      }
+      
+      client = createClient(url, key, {
+        auth: { autoRefreshToken: false, persistSession: false }
+      });
+      console.log('Direct Supabase client created');
+    }
     
     const { searchParams } = new URL(request.url);
     const cursor = searchParams.get('cursor');
@@ -38,7 +69,7 @@ async function getLearnersHandler(request: NextRequest): Promise<Response> {
     const enableSim = process.env.NEXT_PUBLIC_ENABLE_DEV_SIM === 'true';
     
     // Build query
-    let query = supabaseAdmin
+    let query = client
       .from('learners')
       .select('id, name, email, completionPct, quizAvg, missedSessions, lastLogin, riskScore, riskLabel, createdAt, updatedAt')
       .order('id', { ascending: true })
@@ -59,6 +90,7 @@ async function getLearnersHandler(request: NextRequest): Promise<Response> {
       query = query.eq('riskLabel', riskFilter);
     }
     
+    console.log('Executing Supabase query...');
     const { data, error } = await query;
     
     if (error) {
@@ -92,7 +124,11 @@ async function getLearnersHandler(request: NextRequest): Promise<Response> {
       }
       
       return NextResponse.json(
-        { error: 'Failed to fetch learners from database' },
+        { 
+          error: 'Failed to fetch learners from database',
+          details: error.message,
+          code: error.code
+        },
         { status: 500 }
       );
     }
@@ -115,7 +151,11 @@ async function getLearnersHandler(request: NextRequest): Promise<Response> {
   } catch (error) {
     console.error('GET /api/learners error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch learners' },
+      { 
+        error: 'Failed to fetch learners',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

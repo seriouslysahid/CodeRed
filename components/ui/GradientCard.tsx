@@ -110,3 +110,5 @@ const GradientCard: React.FC<GradientCardProps> = ({
 };
 
 export default GradientCard;
+
+

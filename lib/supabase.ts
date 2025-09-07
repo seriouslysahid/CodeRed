@@ -119,6 +119,13 @@ function getSupabaseAdmin(): SupabaseClient<Database> {
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+  console.log('Supabase client initialization:', {
+    SUPABASE_URL: SUPABASE_URL ? 'SET' : 'MISSING',
+    SERVICE_KEY: SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'MISSING',
+    ANON_KEY: SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
+    SERVICE_KEY_VALUE: SUPABASE_SERVICE_ROLE_KEY === 'your_supabase_service_role_key' ? 'PLACEHOLDER' : 'REAL'
+  });
+
   if (!SUPABASE_URL) {
     console.warn('Missing SUPABASE_URL env var - API will return empty data');
     return createMockSupabaseClient();
@@ -136,6 +143,10 @@ function getSupabaseAdmin(): SupabaseClient<Database> {
     console.warn('Using anon key instead of service role key - this is a fallback for hackathon demo');
   }
 
+  if (SUPABASE_SERVICE_ROLE_KEY === 'your_supabase_service_role_key') {
+    console.warn('Service role key is placeholder - using anon key fallback');
+  }
+
   // Reuse across serverless invocations to prevent connection storms
   const supabaseAdmin: SupabaseClient<Database> = createClient<Database>(SUPABASE_URL, keyToUse, {
     auth: {
@@ -148,6 +159,7 @@ function getSupabaseAdmin(): SupabaseClient<Database> {
       )
   });
 
+  console.log('Supabase client created successfully');
   globalThis.__supabase_admin = supabaseAdmin;
   return supabaseAdmin;
 }

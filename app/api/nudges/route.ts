@@ -27,8 +27,23 @@ async function getNudgesHandler(request: NextRequest): Promise<Response> {
     const learnerId = searchParams.get('learnerId');
     const limit = parseInt(searchParams.get('limit') || '100');
     
-    // Build query
-    let query = supabaseAdmin
+    // Build query - create direct client if needed
+    let client = supabaseAdmin;
+    if (!client || typeof client.from !== 'function') {
+      const { createClient } = await import('@supabase/supabase-js');
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!url || !key) {
+        return NextResponse.json({ error: 'Missing Supabase credentials' }, { status: 500 });
+      }
+      
+      client = createClient(url, key, {
+        auth: { autoRefreshToken: false, persistSession: false }
+      });
+    }
+    
+    let query = client
       .from('nudges')
       .select('id, learnerId, text, status, source, createdAt')
       .order('createdAt', { ascending: false })

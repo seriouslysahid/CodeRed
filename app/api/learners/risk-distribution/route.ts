@@ -17,8 +17,23 @@ async function getRiskDistributionHandler(): Promise<Response> {
   try {
     console.log('GET /api/learners/risk-distribution - Fetching risk distribution');
     
-    // Get all learners with risk data
-    const { data, error } = await supabaseAdmin
+    // Get all learners with risk data - create direct client if needed
+    let client = supabaseAdmin;
+    if (!client || typeof client.from !== 'function') {
+      const { createClient } = await import('@supabase/supabase-js');
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!url || !key) {
+        return NextResponse.json({ error: 'Missing Supabase credentials' }, { status: 500 });
+      }
+      
+      client = createClient(url, key, {
+        auth: { autoRefreshToken: false, persistSession: false }
+      });
+    }
+    
+    const { data, error } = await client
       .from('learners')
       .select('riskLabel, riskScore');
     
